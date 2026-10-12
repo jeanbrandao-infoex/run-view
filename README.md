@@ -52,7 +52,7 @@ docker compose up --build -d
 docker compose logs --tail=40 api worker
 ```
 
-Não configure domínio público/Traefik para o serviço. O Compose expõe apenas `127.0.0.1:8090`. Para Hub em outro projeto Compose, conecte apenas a API e o backend do Hub à rede externa e interna configurada em `INFOEX_RUN_CONTROL_NETWORK`; ele a acessa por `http://infoex-run-api:8090`, pois `127.0.0.1` dentro do Hub não é o host. Não conectar sandbox ou PostgreSQL a essa rede.
+Não configure domínio público/Traefik para o serviço. O Compose expõe apenas `127.0.0.1:8090`. A API também recebe uma bridge privada, não compartilhada, pois o Docker não publica portas de containers ligados somente a uma rede `internal`. Para Hub em outro projeto Compose, conecte apenas a API e o backend do Hub à rede externa e interna configurada em `INFOEX_RUN_CONTROL_NETWORK`; ele a acessa por `http://infoex-run-api:8090`, pois `127.0.0.1` dentro do Hub não é o host. Não conectar sandbox ou PostgreSQL a essa rede.
 
 O worker possui Docker socket e, portanto, autoridade ampla sobre o daemon. É uma escolha explícita deste MVP; API e código da IA não recebem o socket. Não colocar projetos não confiáveis nesse worker. Para produção, homologar e considerar broker/daemon dedicado ou VPS separada.
 

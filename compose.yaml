@@ -15,6 +15,7 @@ services:
     networks:
       control:
         aliases: [infoex-run-api]
+      api-local: {}
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -57,3 +58,7 @@ networks:
   control:
     external: true
     name: ${INFOEX_RUN_CONTROL_NETWORK:?Set the pre-created private control network}
+  # Docker requires a non-internal bridge attachment for the localhost-bound
+  # published port. It belongs only to this Compose project and is not shared.
+  api-local:
+    driver: bridge
