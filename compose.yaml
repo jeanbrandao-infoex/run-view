@@ -1,0 +1,59 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      INFOEX_RUN_ADDR: 0.0.0.0:8090
+      INFOEX_RUN_DATA: ${INFOEX_RUN_DATA:?Set an absolute host spool path}
+      INFOEX_RUN_TOKEN: ${INFOEX_RUN_TOKEN:?Set a random token}
+    volumes:
+      - ${INFOEX_RUN_DATA}:${INFOEX_RUN_DATA}
+    # Host-local only. For Hub in Docker, use the private service network below.
+    ports:
+      - "127.0.0.1:8090:8090"
+    networks:
+      control:
+        aliases: [infoex-run-api]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "2"}
+
+  worker:
+    build:
+      context: .
+      target: worker
+    environment:
+      INFOEX_RUN_DATA: ${INFOEX_RUN_DATA:?Set an absolute host spool path}
+      INFOEX_RUN_IMAGE: ${INFOEX_RUN_IMAGE:?Set the locally installed sandbox digest}
+    volumes:
+      # Same absolute path inside worker and on daemon host is mandatory.
+      - ${INFOEX_RUN_DATA}:${INFOEX_RUN_DATA}
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - ${DOCKER_SOCKET_GID:?Set the host docker socket group ID}
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 64
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "2"}
+
+networks:
+  # Created once on the Docker host with --internal, then shared only with
+  # the Hub backend. Do not attach PostgreSQL or sandbox containers to it.
+  control:
+    external: true
+    name: ${INFOEX_RUN_CONTROL_NETWORK:?Set the pre-created private control network}
